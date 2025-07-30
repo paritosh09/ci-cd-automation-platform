@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: cicd_platform
+      POSTGRES_USER: cicd_user
+      POSTGRES_PASSWORD: cicd_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cicd_user -d cicd_platform"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongodb:
+    image: mongo:7-jammy
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: cicd_user
+      MONGO_INITDB_ROOT_PASSWORD: cicd_password
+      MONGO_INITDB_DATABASE: cicd_logs
+    volumes:
+      - mongodb_data:/data/db
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass cicd_password
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: cicd_user
+      RABBITMQ_DEFAULT_PASS: cicd_password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  app:
+    build: .
+    environment:
+      DB_USERNAME: cicd_user
+      DB_PASSWORD: cicd_password
+      MONGO_USERNAME: cicd_user
+      MONGO_PASSWORD: cicd_password
+      REDIS_PASSWORD: cicd_password
+      RABBITMQ_USERNAME: cicd_user
+      RABBITMQ_PASSWORD: cicd_password
+      JWT_SECRET: ${JWT_SECRET:-mySecretKey12345678901234567890123456789012}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
+      GITHUB_WEBHOOK_SECRET: ${GITHUB_WEBHOOK_SECRET}
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+      - mongodb
+      - redis
+      - rabbitmq
+
+volumes:
+  postgres_data:
+  mongodb_data:
+  redis_data:
+  rabbitmq_data:
