@@ -8,7 +8,7 @@ Enterprise-grade CI/CD Pipeline Automation Platform built with Spring Boot.
 - Webhook processing for automated builds
 - User authentication with JWT
 - Docker containerization
-- Multi-database support (MYSQL, MongoDB, Redis)
+- Multi-database support (MYSQL , MongoDB, Redis)
 
 ## Quick Setup
 
